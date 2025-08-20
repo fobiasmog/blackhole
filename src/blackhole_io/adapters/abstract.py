@@ -2,7 +2,7 @@ from typing import Union, Any, overload
 from io import BytesIO
 from abc import ABC, abstractmethod
 from starlette.datastructures import UploadFile
-from blackhole.adapters import UploadFileType
+from blackhole_io.adapters import UploadFileType
 
 
 class AbstractAdapter(ABC):

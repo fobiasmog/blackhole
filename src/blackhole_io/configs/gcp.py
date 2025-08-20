@@ -1,5 +1,5 @@
 
-from blackhole.configs.abstract import AbstractConfig
+from blackhole_io.configs.abstract import AbstractConfig
 from pydantic import Field
 
 class GCPConfig(AbstractConfig):

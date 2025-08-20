@@ -1,6 +1,6 @@
 [project]
 name = "blackhole-io"
-version = "0.1.0"
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "boto3>=1.40.11",
     "pydantic>=2.11.7",
     "starlette>=0.47.2",
 ]

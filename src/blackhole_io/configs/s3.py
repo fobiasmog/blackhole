@@ -1,5 +1,5 @@
 from pydantic import Field
-from blackhole.configs.abstract import AbstractConfig
+from blackhole_io.configs.abstract import AbstractConfig
 
 class S3Config(AbstractConfig):
     bucket: str = Field(..., description="The name of the S3 bucket")

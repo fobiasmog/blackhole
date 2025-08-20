@@ -1,8 +1,8 @@
-from blackhole.adapters.abstract import AbstractAdapter
+from blackhole_io.adapters.abstract import AbstractAdapter
 
 from typing import Union
 from io import BytesIO
-from blackhole.adapters import UploadFileType
+from blackhole_io.adapters import UploadFileType
 
 
 class GCPAdapter(AbstractAdapter):

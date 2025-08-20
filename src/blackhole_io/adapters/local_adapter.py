@@ -1,12 +1,12 @@
 from typing import Union
 from io import BytesIO
-from blackhole.adapters.abstract import AbstractAdapter
-from blackhole.configs.local import LocalConfig
+from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.configs.local import LocalConfig
 from pathlib import Path
 import os
 from uuid import uuid4
 from starlette.datastructures import UploadFile
-from blackhole.adapters import UploadFileType
+from blackhole_io.adapters import UploadFileType
 import asyncio
 
 class LocalAdapter(AbstractAdapter):

@@ -1,8 +1,9 @@
-from blackhole.adapters.factory import AdapterFactory
-from blackhole.configs import ConfigType
-from blackhole.adapters import UploadFileType
-from blackhole.adapters.abstract import AbstractAdapter
+from blackhole_io.adapters.factory import AdapterFactory
+from blackhole_io.configs import ConfigType
+from blackhole_io.adapters import UploadFileType
+from blackhole_io.adapters.abstract import AbstractAdapter
 
+from typing import Any
 
 class Blackhole(AbstractAdapter):
     def __init__(self, config: ConfigType) -> None:
@@ -10,7 +11,7 @@ class Blackhole(AbstractAdapter):
         self.adapter = AdapterFactory.create(config)
 
     # TODO: injecting methods from adapter during init
-    async def put(self, file: UploadFileType) -> str:
+    async def put(self, file: UploadFileType) -> Any:
         return await self.adapter.put(file)
 
     async def put_all(self, files: list[UploadFileType]) -> list[str]:

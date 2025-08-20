@@ -5,13 +5,13 @@ The universal file storage adapter for the major Cloud storage services like AWS
 
 
 ### TODOs
-[ ] aws, gcp and azure providers
-[ ] aiofiles for local adapter
-[ ] tests
-[ ] get settings from yaml file (pydantic-settings)
-[ ] middlewares (pre/post)
-[ ] put_later - background job uploading/downloading
-[ ] ...
+- [ ] aws, gcp and azure providers
+- [ ] aiofiles for local adapter
+- [ ] tests
+- [ ] get settings from yaml file (pydantic-settings)
+- [ ] middlewares (pre/post)
+- [ ] put_later - background job uploading/downloading
+- [ ] ...
 
 
 ### Init
