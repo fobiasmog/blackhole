@@ -10,8 +10,6 @@ from botocore.config import Config
 from blackhole_io.configs.s3 import S3Config
 from starlette.datastructures import UploadFile
 from uuid import uuid4
-from contextlib import asynccontextmanager, contextmanager
-import boto3.session
 import concurrent.futures
 
 
@@ -27,27 +25,6 @@ class S3Adapter(AbstractAdapter):
             aws_access_key_id=config.access_key,
             aws_secret_access_key=config.secret_key,
         )
-
-
-    @contextmanager
-    def session(self):
-        s = boto3.session.Session()
-        client = s.client(
-            "s3",
-            config=Config(
-                signature_version="v4",
-                region_name=self.config.region,
-            ),
-            aws_access_key_id=self.config.access_key,
-            aws_secret_access_key=self.config.secret_key,
-        )
-        try:
-            yield client
-        except Exception as e:
-            print(f"[S3Adapter] Error: {e}")
-            # await s.close()
-        # finally:
-        #     await s.close()
 
 
     async def put(self, file: UploadFileType, key: Optional[str] = None,  **kwargs) -> str:
@@ -79,28 +56,24 @@ class S3Adapter(AbstractAdapter):
         bucket = kwargs.pop("Bucket", self.config.bucket)
         kwargs.pop("Key", None)
 
-        with self.session() as s3_session:
-            # bucket = s3.Bucket(self.config.bucket)
-            # obj = s3.Object(self.config.bucket, key)
-            if isinstance(file, str):
-                s3_session.upload_file(
-                    Filename=file,
-                    Bucket=bucket,
-                    Key=key,
-                    **kwargs
-                )
-                return key
-
-            fileobj = file
-            if isinstance(file, UploadFile):
-                fileobj = file.file
-
-            s3_session.upload_fileobj(
-                Fileobj=fileobj,
+        if isinstance(file, str):
+            self.client.upload_file(
+                Filename=file,
                 Bucket=bucket,
                 Key=key,
                 **kwargs
             )
-            # obj.upload_fileobj(fileobj, **kwargs)
-            print(f"[S3Adapter] Uploaded {key} to bucket")
             return key
+
+        fileobj = file
+        if isinstance(file, UploadFile):
+            fileobj = file.file
+
+        self.client.upload_fileobj(
+            Fileobj=fileobj,
+            Bucket=bucket,
+            Key=key,
+            **kwargs
+        )
+        print(f"[S3Adapter] Uploaded {key} to bucket")
+        return key
