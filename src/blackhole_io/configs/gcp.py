@@ -1,6 +1,7 @@
+from pydantic import Field
 
 from blackhole_io.configs.abstract import AbstractConfig
-from pydantic import Field
+
 
 class GCPConfig(AbstractConfig):
     bucket: str = Field(..., description="The name of the GCP bucket")

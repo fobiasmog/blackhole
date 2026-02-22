@@ -1,18 +1,20 @@
-from typing import Union
+import asyncio
+import os
 from io import BytesIO
+from pathlib import Path
+from typing import Union
+from uuid import uuid4
+
+from starlette.datastructures import UploadFile
+
+from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
 from blackhole_io.configs.local import LocalConfig
-from pathlib import Path
-import os
-from uuid import uuid4
-from starlette.datastructures import UploadFile
-from blackhole_io.adapters import UploadFileType
-import asyncio
+
 
 class LocalAdapter(AbstractAdapter):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
 
     async def put(self, file: UploadFileType) -> str:
         dir = self.config.directory
@@ -39,12 +41,8 @@ class LocalAdapter(AbstractAdapter):
 
         return filename
 
-
     async def put_all(self, files: list[UploadFileType]) -> list[str]:
-        return await asyncio.gather(
-            *[self.put(file) for file in files]
-        )
-
+        return await asyncio.gather(*[self.put(file) for file in files])
 
     async def get(self, file_name: str) -> bytes:
         dir = self.config.directory
@@ -60,7 +58,6 @@ class LocalAdapter(AbstractAdapter):
         with open(file_name, "rb") as f:
             data = f.read()
             return data
-
 
     async def delete(self, file_name: str) -> None:
         dir = self.config.directory

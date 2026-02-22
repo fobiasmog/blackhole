@@ -1,5 +1,5 @@
-from blackhole_io.adapters.abstract import AbstractAdapter
 from blackhole_io.adapters import UploadFileType
+from blackhole_io.adapters.abstract import AbstractAdapter
 
 
 class GCPAdapter(AbstractAdapter):

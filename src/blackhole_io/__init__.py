@@ -1,10 +1,11 @@
-from blackhole_io.adapters.factory import AdapterFactory
-from blackhole_io.configs import ConfigType
-from blackhole_io.adapters import UploadFileType
-
 from typing import Any
 
-class Blackhole():
+from blackhole_io.adapters import UploadFileType
+from blackhole_io.adapters.factory import AdapterFactory
+from blackhole_io.configs import ConfigType
+
+
+class Blackhole:
     def __init__(self, config: ConfigType) -> None:
         self.config = config
         self.adapter = AdapterFactory.create(config)

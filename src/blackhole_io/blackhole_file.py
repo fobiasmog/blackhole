@@ -1,6 +1,7 @@
 ### BlackholeFile
 # Object of this class represents the information about uploaded/downloaded file
 
+
 class BlackholeFile:
     def __init__(self):
         self.filename: str = ""
@@ -9,5 +10,3 @@ class BlackholeFile:
 
     def blob(self) -> bytes:
         return b""
-
-

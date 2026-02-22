@@ -1,7 +1,9 @@
-from typing import Union, Any, overload
-from io import BytesIO
 from abc import ABC, abstractmethod
+from io import BytesIO
+from typing import Any, Union, overload
+
 from starlette.datastructures import UploadFile
+
 from blackhole_io.adapters import UploadFileType
 
 
