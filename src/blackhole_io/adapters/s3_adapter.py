@@ -1,4 +1,5 @@
 import asyncio
+import functools
 from blackhole_io.adapters.abstract import AbstractAdapter
 
 from typing import Union, Any, Coroutine, Awaitable, Optional
@@ -55,17 +56,10 @@ class S3Adapter(AbstractAdapter):
         # return self._sync_put(file, key, **kwargs)
         loop = asyncio.get_event_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            return await loop.run_in_executor(pool, self._sync_put, file, key, **kwargs)
+            return await loop.run_in_executor(pool, functools.partial(self._sync_put, file, key, **kwargs))
 
 
     async def put_all(self, files: list[UploadFileType], **kwargs) -> list[Any]:
-        # for file in files:
-        #     key = kwargs.get("Key") or key or uuid4().hex
-        #     await self.put(file=file, key=key, **kwargs)
-        # return [
-        #     await self.put(file=file, **kwargs) for file in files
-        # ]
-
         return await asyncio.gather(
             *[self.put(file=file,**kwargs) for file in files],
         )
@@ -82,13 +76,16 @@ class S3Adapter(AbstractAdapter):
 
 
     def _sync_put(self, file: UploadFileType, key: str,  **kwargs) -> str:
+        bucket = kwargs.pop("Bucket", self.config.bucket)
+        kwargs.pop("Key", None)
+
         with self.session() as s3_session:
             # bucket = s3.Bucket(self.config.bucket)
             # obj = s3.Object(self.config.bucket, key)
             if isinstance(file, str):
                 s3_session.upload_file(
                     Filename=file,
-                    Bucket=kwargs.get("Bucket", self.config.bucket),
+                    Bucket=bucket,
                     Key=key,
                     **kwargs
                 )
@@ -100,7 +97,7 @@ class S3Adapter(AbstractAdapter):
 
             s3_session.upload_fileobj(
                 Fileobj=fileobj,
-                Bucket=kwargs.get("Bucket", self.config.bucket),
+                Bucket=bucket,
                 Key=key,
                 **kwargs
             )

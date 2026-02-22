@@ -1,13 +1,10 @@
 from blackhole_io.adapters.abstract import AbstractAdapter
-
-from typing import Union
-from io import BytesIO
 from blackhole_io.adapters import UploadFileType
 
 
 class GCPAdapter(AbstractAdapter):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
     async def put(self, file: UploadFileType) -> str:
         print("[GCPAdapter] PUT")

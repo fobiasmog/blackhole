@@ -13,9 +13,6 @@ dependencies = [
     "starlette>=0.47.2",
 ]
 
-[project.scripts]
-blackhole = "blackhole:main"
-
 [project.urls]
 Homepage = "https://github.com/fobiasmog/blackhole"
 
