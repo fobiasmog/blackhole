@@ -1,8 +1,7 @@
 import asyncio
 import concurrent.futures
 import functools
-from io import BytesIO
-from typing import Any, Awaitable, Coroutine, Optional, Union
+from typing import Any, Optional
 from uuid import uuid4
 
 import boto3

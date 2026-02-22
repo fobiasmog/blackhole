@@ -1,15 +1,12 @@
 import asyncio
 import os
 from io import BytesIO
-from pathlib import Path
-from typing import Union
 from uuid import uuid4
 
 from starlette.datastructures import UploadFile
 
 from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
-from blackhole_io.configs.local import LocalConfig
 
 
 class LocalAdapter(AbstractAdapter):
