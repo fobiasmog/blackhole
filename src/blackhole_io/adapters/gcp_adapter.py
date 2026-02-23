@@ -1,5 +1,6 @@
 from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.blackhole_file import BlackholeFile
 
 
 class GCPAdapter(AbstractAdapter):
@@ -14,9 +15,13 @@ class GCPAdapter(AbstractAdapter):
         print("[GCPAdapter] PUT ALL")
         return [""] * len(files)
 
-    async def get(self, file_name: str) -> UploadFileType:
+    async def get(self, file_name: str) -> BlackholeFile:
         print("[GCPAdapter] GET")
-        return ""
+        return BlackholeFile(filename=file_name)
+
+    async def exists(self, file_name: str) -> bool:
+        print("[GCPAdapter] EXISTS")
+        return False
 
     async def delete(self, file_name: str) -> None:
         print("[GCPAdapter] DELETE")

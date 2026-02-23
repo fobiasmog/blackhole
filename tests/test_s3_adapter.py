@@ -78,3 +78,46 @@ async def test_put_all(adapter):
     keys = await adapter.put_all(files)
     assert len(keys) == 3
     assert adapter.client.upload_fileobj.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_get(adapter):
+    mock_body = MagicMock()
+    mock_body.read.return_value = b"file content"
+    adapter.client.get_object.return_value = {
+        "Body": mock_body,
+        "ContentType": "text/plain",
+        "ContentLength": 12,
+    }
+    result = await adapter.get("my-key")
+    assert result.filename == "my-key"
+    assert result.blob == b"file content"
+    assert result.content_type == "text/plain"
+    assert result.size == 12
+    adapter.client.get_object.assert_called_once_with(
+        Bucket="test-bucket", Key="my-key"
+    )
+
+
+@pytest.mark.asyncio
+async def test_exists_true(adapter):
+    result = await adapter.exists("my-key")
+    assert result is True
+    adapter.client.head_object.assert_called_once_with(
+        Bucket="test-bucket", Key="my-key"
+    )
+
+
+@pytest.mark.asyncio
+async def test_exists_false(adapter):
+    adapter.client.head_object.side_effect = Exception("not found")
+    result = await adapter.exists("missing-key")
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_delete(adapter):
+    await adapter.delete("my-key")
+    adapter.client.delete_object.assert_called_once_with(
+        Bucket="test-bucket", Key="my-key"
+    )

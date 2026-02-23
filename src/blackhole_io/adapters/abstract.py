@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from blackhole_io.adapters import UploadFileType
+from blackhole_io.blackhole_file import BlackholeFile
 
 
 class AbstractAdapter(ABC):
@@ -17,7 +18,11 @@ class AbstractAdapter(ABC):
         pass
 
     @abstractmethod
-    async def get(self, file_name: str) -> UploadFileType:
+    async def get(self, file_name: str) -> BlackholeFile:
+        pass
+
+    @abstractmethod
+    async def exists(self, file_name: str) -> bool:
         pass
 
     @abstractmethod

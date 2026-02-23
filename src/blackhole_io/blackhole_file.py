@@ -1,12 +1,15 @@
 ### BlackholeFile
 # Object of this class represents the information about uploaded/downloaded file
 
+from pydantic import BaseModel, Field
 
-class BlackholeFile:
-    def __init__(self):
-        self.filename: str = ""
-        self.content_type: str = ""
-        self.size: int = 0
 
+class BlackholeFile(BaseModel):
+    filename: str = Field(..., description="The name/key of the file in storage")
+    content_type: str = Field(default="application/octet-stream")
+    size: int = Field(default=0)
+    data: bytes = Field(default=b"", repr=False)
+
+    @property
     def blob(self) -> bytes:
-        return b""
+        return self.data
