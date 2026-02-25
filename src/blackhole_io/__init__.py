@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.factory import AdapterFactory
@@ -9,11 +9,9 @@ from blackhole_io.configs.loader import load_config
 
 
 class Blackhole:
-    def __init__(self, config: ConfigType | str | Path) -> None:
-        if isinstance(config, (str, Path)):
-            config = load_config(config)
-        self.config = config
-        self.adapter = AdapterFactory.create(config)
+    def __init__(self, config: Optional[ConfigType | str | Path] = None) -> None:
+        self.config = load_config(config)
+        self.adapter = AdapterFactory.create(self.config)
 
     # TODO: injecting methods from adapter during init
     async def put(self, file: UploadFileType) -> Any:
