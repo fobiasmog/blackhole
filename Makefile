@@ -8,3 +8,6 @@ format:
 	isort src tests && \
 	ruff clean && \
 	ruff check --fix src tests
+
+dist-build:
+	uv build

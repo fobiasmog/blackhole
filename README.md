@@ -6,14 +6,20 @@ The universal file storage adapter for the major Cloud storage services like AWS
 
 ### TODOs
 - [ ] aws, gcp and azure providers
+  - [x] aws
+  - [ ] gcp
+  - [ ] azure
 - [x] aiofiles for local adapter
 - [x] tests
-- [ ] get settings from yaml file (pydantic-settings)
+- [x] get settings from yaml file (pydantic-settings)
 - [ ] middlewares (pre/post)
 - [ ] put_later - background job uploading/downloading
 - [ ] asset management web interface
 - [ ] find a ways how to integrate with sqlalchemy orm models to upload files smoothly
-- [ ] big files upload/download
+- [ ] monitoring
+- [ ] error tracking
+- [x] logging
+- [ ] big files upload/download (streaming)
 - [ ] ...
 
 

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -8,6 +9,8 @@ from blackhole_io.configs import ConfigType
 from blackhole_io.configs.gcp import GCPConfig
 from blackhole_io.configs.local import LocalConfig
 from blackhole_io.configs.s3 import S3Config
+
+logger = logging.getLogger(__name__)
 
 ADAPTER_MAP: dict[str, type] = {
     "s3": S3Config,
@@ -39,6 +42,7 @@ def _load_from_yaml(path: Path) -> ConfigType:
             if env_val is not None:
                 data[key] = env_val
 
+    logger.debug("Loaded '%s' config from YAML: %s", adapter, path)
     return config_cls(**data)
 
 
@@ -69,11 +73,13 @@ def load_config(config: Optional[ConfigType | str | Path] = None) -> ConfigType:
     # config is None — try auto-discovery
     yaml_path = _discover_yaml()
     if yaml_path is not None:
+        logger.debug("Auto-discovered config at %s", yaml_path)
         return _load_from_yaml(yaml_path)
 
     # Fall back to env vars
     adapter = os.environ.get("BLACKHOLE_ADAPTER")
     if adapter is not None:
+        logger.debug("Using env var fallback: BLACKHOLE_ADAPTER=%s", adapter)
         config_cls = ADAPTER_MAP.get(adapter)
         if config_cls is None:
             raise ValueError(

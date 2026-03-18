@@ -1,6 +1,7 @@
 import asyncio
 import concurrent.futures
 import functools
+import logging
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -12,6 +13,8 @@ from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
 from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.s3 import S3Config
+
+logger = logging.getLogger(__name__)
 
 
 class S3Adapter(AbstractAdapter):
@@ -31,8 +34,7 @@ class S3Adapter(AbstractAdapter):
         self, file: UploadFileType, key: Optional[str] = None, **kwargs
     ) -> str:
         key = kwargs.get("Key") or key or uuid4().hex
-        print(f"[S3Adapter] Uploading {key} to bucket")
-        # return self._sync_put(file, key, **kwargs)
+        logger.info("Uploading %s to bucket", key)
         loop = asyncio.get_event_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return await loop.run_in_executor(
@@ -110,5 +112,5 @@ class S3Adapter(AbstractAdapter):
             fileobj = file.file
 
         self.client.upload_fileobj(Fileobj=fileobj, Bucket=bucket, Key=key, **kwargs)
-        print(f"[S3Adapter] Uploaded {key} to bucket")
+        logger.info("Uploaded %s to bucket", key)
         return key

@@ -1,7 +1,7 @@
 [project]
 name = "blackhole-io"
-version = "0.1.1"
-description = "Add your description here"
+version = "0.1.2"
+description = "Universal file storage interface for Python"
 readme = "README.md"
 authors = [
     { name = "fobiasmog", email = "zbrejkin@yandex.ru" }

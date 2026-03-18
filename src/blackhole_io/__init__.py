@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Optional
 
@@ -7,9 +8,21 @@ from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs import ConfigType
 from blackhole_io.configs.loader import load_config
 
+logger = logging.getLogger("blackhole_io")
+logger.setLevel(logging.ERROR)
+
 
 class Blackhole:
-    def __init__(self, config: Optional[ConfigType | str | Path] = None) -> None:
+    def __init__(
+        self,
+        config: Optional[ConfigType | str | Path] = None,
+        log_level: Optional[int] = None,
+    ) -> None:
+        if log_level is not None:
+            logger.setLevel(log_level)
+            if not logger.handlers:
+                logger.addHandler(logging.StreamHandler())
+
         self.config = load_config(config)
         self.adapter = AdapterFactory.create(self.config)
 
