@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import Field
 from pydantic_settings import SettingsConfigDict
 
@@ -9,4 +11,8 @@ class GCPConfig(AbstractConfig):
 
     bucket: str = Field(..., description="The name of the GCP bucket")
     project_id: str = Field(..., description="The GCP project ID")
-    credentials: dict = Field(..., description="GCP credentials for authentication")
+    credentials: Optional[dict] = Field(default=None, description="GCP credentials for authentication")
+
+    @classmethod
+    def env_fields(cls) -> set[str]:
+        return {"credentials"}

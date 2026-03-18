@@ -16,15 +16,15 @@ from blackhole_io.configs.s3 import S3Config
 
 class S3Adapter(AbstractAdapter):
     def __init__(self, config: S3Config, **kwargs) -> None:
-        self.config = config
+        super().__init__(config)
         self.client = boto3.client(
             "s3",
             config=Config(
                 signature_version="v4",
-                region_name=config.region,
+                region_name=self.config.region,
             ),
-            aws_access_key_id=config.access_key,
-            aws_secret_access_key=config.secret_key,
+            aws_access_key_id=self.config.access_key,
+            aws_secret_access_key=self.config.secret_key,
         )
 
     async def put(
