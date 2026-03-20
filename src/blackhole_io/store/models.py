@@ -10,7 +10,7 @@ class FileRecord(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str = Field(index=True, unique=True)
-    content_type: str = Field(default="application/octet-stream")
+    content_type: Optional[str] = Field(default=None)
     size: int = Field(default=0)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     extra_metadata: Optional[dict[str, Any]] = Field(

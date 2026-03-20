@@ -40,15 +40,12 @@ class Blackhole:
         filename: Optional[str] = None,
         extra_metadata: Optional[dict[str, Any]] = None,
     ) -> str:
-        upload_filename = None
+        upload_filename = filename or uuid4().hex
         content_type = None
 
-        if file.__class__.__name__ == "UploadFile":
-            upload_filename = file.filename
+        if hasattr(file, "filename") and not filename:
+            upload_filename = file.filename or upload_filename
             content_type = file.content_type
-
-        upload_filename = upload_filename or filename or uuid4().hex
-        content_type = content_type or None
 
         bh_file = BlackholeFile(
             filename=upload_filename,

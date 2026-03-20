@@ -15,13 +15,6 @@ async def test_get(adapter):
 
 
 @pytest.mark.asyncio
-async def test_get_content_type_default(adapter):
-    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=b"data"))
-    result = await adapter.get(filename)
-    assert result.content_type == "application/octet-stream"
-
-
-@pytest.mark.asyncio
 async def test_get_not_found(adapter):
     with pytest.raises(FileNotFoundError):
         await adapter.get("nonexistent")
