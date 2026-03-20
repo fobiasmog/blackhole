@@ -56,8 +56,7 @@ class Blackhole:
         filename = await self.adapter.put(bh_file)
 
         logger.info(
-            f"Uploading filename: {upload_filename} ",
-            f"with content_type: {content_type}" if content_type else "",
+            f"Uploading filename: {upload_filename} with content_type: {content_type}"
         )
 
         if self.store is not None:
