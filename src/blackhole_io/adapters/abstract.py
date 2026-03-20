@@ -1,8 +1,7 @@
-from typing import Union, Any, overload
-from io import BytesIO
 from abc import ABC, abstractmethod
-from starlette.datastructures import UploadFile
-from blackhole_io.adapters import UploadFileType
+from typing import Any
+
+from blackhole_io.blackhole_file import BlackholeFile
 
 
 class AbstractAdapter(ABC):
@@ -10,17 +9,21 @@ class AbstractAdapter(ABC):
         self.config = config
 
     @abstractmethod
-    async def put(self, file: UploadFileType) -> str:
+    async def put(self, file: BlackholeFile) -> str:
         pass
 
     @abstractmethod
-    async def put_all(self, files: list[UploadFileType]) -> list[str]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[str]:
         pass
 
     @abstractmethod
-    async def get(self, file_name: str) -> UploadFileType:
+    async def get(self, **kwargs) -> BlackholeFile:
         pass
 
     @abstractmethod
-    async def delete(self, file_name: str) -> None:
+    async def exists(self, **kwargs) -> bool:
+        pass
+
+    @abstractmethod
+    async def delete(self, **kwargs) -> None:
         pass

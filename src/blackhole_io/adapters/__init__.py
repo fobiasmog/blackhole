@@ -1,5 +1,3 @@
-from typing import Union
-from io import BytesIO
-from starlette.datastructures import UploadFile
+from blackhole_io.types import UploadFileType
 
-UploadFileType = Union[str, bytes, BytesIO, UploadFile]
+__all__ = ["UploadFileType"]

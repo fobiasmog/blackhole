@@ -1,64 +1,114 @@
 import asyncio
-from blackhole_io.adapters.abstract import AbstractAdapter
+import concurrent.futures
+import functools
+import logging
+from typing import Any
 
-from typing import Union, Any
-from io import BytesIO
-from blackhole_io.adapters import UploadFileType
 import boto3
 from botocore.config import Config
-from blackhole_io.configs.s3 import S3Config
 from starlette.datastructures import UploadFile
-from uuid import uuid4
+
+from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.blackhole_file import BlackholeFile
+from blackhole_io.configs.s3 import S3Config
+from blackhole_io.types import UploadFileType
+
+logger = logging.getLogger(__name__)
+
 
 class S3Adapter(AbstractAdapter):
     def __init__(self, config: S3Config, **kwargs) -> None:
-        self.config = config
+        super().__init__(config)
         self.client = boto3.client(
             "s3",
             config=Config(
                 signature_version="v4",
-                region_name=config.region,
+                region_name=self.config.region,
             ),
-            aws_access_key_id=config.access_key,
-            aws_secret_access_key=config.secret_key,
+            aws_access_key_id=self.config.access_key,
+            aws_secret_access_key=self.config.secret_key,
         )
 
-
-    async def put(self, file: UploadFileType, key: str = uuid4().hex,  **kwargs) -> str:
-        filename = kwargs.get("Key", key)
-        if isinstance(file, str):
-            self.client.upload_file(
-                Filename=file,
-                Bucket=kwargs.get("Bucket", self.config.bucket),
-                Key=filename,
-                **kwargs
+    async def put(self, file: BlackholeFile) -> str:
+        key = file.filename
+        extra = dict(file.extra)
+        logger.info("Uploading %s to bucket", key)
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool, functools.partial(self._sync_put, file.data_to_upload, key, **extra)
             )
-            return filename
+
+    async def put_all(self, files: list[BlackholeFile]) -> list[Any]:
+        return await asyncio.gather(
+            *[self.put(file=file) for file in files],
+        )
+
+    async def get(self, file_name: str) -> BlackholeFile:
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool, functools.partial(self._sync_get, file_name)
+            )
+
+    async def exists(self, file_name: str) -> bool:
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool, functools.partial(self._sync_exists, file_name)
+            )
+
+    async def delete(self, file_name: str) -> None:
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(
+                pool, functools.partial(self._sync_delete, file_name)
+            )
+
+    def _sync_get(self, file_name: str) -> BlackholeFile:
+        response = self.client.get_object(
+            Bucket=self.config.bucket,
+            Key=file_name,
+        )
+        data = response["Body"].read()
+        content_type = response.get("ContentType", "application/octet-stream")
+        size = response.get("ContentLength", len(data))
+
+        return BlackholeFile(
+            filename=file_name,
+            content_type=content_type,
+            size=size,
+            data=data,
+        )
+
+    def _sync_exists(self, file_name: str) -> bool:
+        try:
+            self.client.head_object(
+                Bucket=self.config.bucket,
+                Key=file_name,
+            )
+            return True
+        except Exception:
+            return False
+
+    def _sync_delete(self, file_name: str) -> None:
+        self.client.delete_object(
+            Bucket=self.config.bucket,
+            Key=file_name,
+        )
+
+    def _sync_put(self, file: UploadFileType, key: str, **kwargs) -> str:
+        bucket = kwargs.pop("Bucket", self.config.bucket)
+        kwargs.pop("Key", None)
+
+        if isinstance(file, str):
+            self.client.upload_file(Filename=file, Bucket=bucket, Key=key, **kwargs)
+            return key
 
         fileobj = file
         if isinstance(file, UploadFile):
             fileobj = file.file
 
-        self.client.upload_fileobj(
-            Fileobj=fileobj,
-            Bucket=kwargs.get("Bucket", self.config.bucket),
-            Key=filename,
-            **kwargs
-        )
-        return filename
-
-
-    async def put_all(self, files: list[UploadFileType], **kwargs) -> list[Any]:
-        return await asyncio.gather(
-            *[self.put(file=file,**kwargs) for file in files],
-        )
-
-
-    async def get(self, file_name: str) -> UploadFileType:
-        print("[S3Adapter] GET")
-        return ""
-
-
-    async def delete(self, file_name: str) -> None:
-        print("[S3Adapter] DELETE")
-        pass
+        self.client.upload_fileobj(Fileobj=fileobj, Bucket=bucket, Key=key, **kwargs)
+        logger.info("Uploaded %s to bucket", key)
+        return key
