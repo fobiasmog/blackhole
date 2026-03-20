@@ -2,15 +2,17 @@ import os
 
 import pytest
 
+from blackhole_io.blackhole_file import BlackholeFile
+
 
 @pytest.mark.asyncio
-async def test_delete(adapter):
+async def test_delete(adapter, tmp_path):
     data = b"delete me"
-    filename = await adapter.put(data)
-    basename = os.path.basename(filename)
-    assert os.path.exists(filename)
-    await adapter.delete(basename)
-    assert not os.path.exists(filename)
+    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
+    full_path = tmp_path / filename
+    assert os.path.exists(full_path)
+    await adapter.delete(filename)
+    assert not os.path.exists(full_path)
 
 
 @pytest.mark.asyncio

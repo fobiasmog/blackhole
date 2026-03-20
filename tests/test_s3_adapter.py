@@ -6,6 +6,7 @@ import pytest_asyncio
 from starlette.datastructures import UploadFile
 
 from blackhole_io.adapters.s3_adapter import S3Adapter
+from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.s3 import S3Config
 
 
@@ -27,7 +28,8 @@ async def adapter():
 @pytest.mark.asyncio
 async def test_put_bytes(adapter):
     data = b"hello bytes"
-    key = await adapter.put(BytesIO(data), key="test-key")
+    file = BlackholeFile(filename="test-key", data_to_upload=BytesIO(data))
+    key = await adapter.put(file)
     assert key == "test-key"
     adapter.client.upload_fileobj.assert_called_once()
     call_kwargs = adapter.client.upload_fileobj.call_args
@@ -39,7 +41,8 @@ async def test_put_bytes(adapter):
 async def test_put_str_path(adapter, tmp_path):
     source = tmp_path / "source.txt"
     source.write_bytes(b"hello file")
-    key = await adapter.put(str(source), key="file-key")
+    file = BlackholeFile(filename="file-key", data_to_upload=str(source))
+    key = await adapter.put(file)
     assert key == "file-key"
     adapter.client.upload_file.assert_called_once()
     call_kwargs = adapter.client.upload_file.call_args
@@ -52,21 +55,23 @@ async def test_put_str_path(adapter, tmp_path):
 async def test_put_upload_file(adapter):
     data = b"hello upload"
     upload = UploadFile(file=BytesIO(data), filename="test.txt")
-    key = await adapter.put(upload, key="upload-key")
+    file = BlackholeFile(filename="upload-key", data_to_upload=upload)
+    key = await adapter.put(file)
     assert key == "upload-key"
     adapter.client.upload_fileobj.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_put_generates_key(adapter):
-    key = await adapter.put(b"data")
-    assert key is not None
-    assert len(key) == 32  # uuid4().hex length
+async def test_put_uses_filename_as_key(adapter):
+    file = BlackholeFile(filename="my-key", data_to_upload=b"data")
+    key = await adapter.put(file)
+    assert key == "my-key"
 
 
 @pytest.mark.asyncio
 async def test_put_custom_bucket(adapter):
-    key = await adapter.put(BytesIO(b"data"), key="k", Bucket="other-bucket")
+    file = BlackholeFile(filename="k", data_to_upload=BytesIO(b"data"), extra={"Bucket": "other-bucket"})
+    key = await adapter.put(file)
     assert key == "k"
     call_kwargs = adapter.client.upload_fileobj.call_args
     assert call_kwargs.kwargs["Bucket"] == "other-bucket"
@@ -74,7 +79,10 @@ async def test_put_custom_bucket(adapter):
 
 @pytest.mark.asyncio
 async def test_put_all(adapter):
-    files = [BytesIO(b"f1"), BytesIO(b"f2"), BytesIO(b"f3")]
+    files = [
+        BlackholeFile(filename=f"f{i}", data_to_upload=BytesIO(d))
+        for i, d in enumerate([b"f1", b"f2", b"f3"])
+    ]
     keys = await adapter.put_all(files)
     assert len(keys) == 3
     assert adapter.client.upload_fileobj.call_count == 3

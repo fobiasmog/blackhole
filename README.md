@@ -6,6 +6,7 @@ The universal file storage adapter for the major Cloud storage services like AWS
 
 ### TODOs
 - [ ] aws, gcp and azure providers
+  - [x] local
   - [x] aws
   - [ ] gcp
   - [ ] azure
@@ -14,6 +15,8 @@ The universal file storage adapter for the major Cloud storage services like AWS
 - [x] tests
 - [x] get settings from yaml file (pydantic-settings)
 - [x] SQLModel / SQL database integration
+  - [ ] save adapter type when storing record
+  - [ ] store file's hashsum
 - [x] pluggable store abstraction (SQL, extensible to Redis, MongoDB, etc.)
 - [ ] middlewares (pre/post)
 - [ ] put_later - background job uploading/downloading

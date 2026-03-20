@@ -2,23 +2,23 @@ import os
 
 import pytest
 
+from blackhole_io.blackhole_file import BlackholeFile
+
 
 @pytest.mark.asyncio
 async def test_get(adapter):
     data = b"get me"
-    filename = await adapter.put(data)
-    basename = os.path.basename(filename)
-    result = await adapter.get(basename)
-    assert result.filename == basename
+    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
+    result = await adapter.get(filename)
+    assert result.filename == filename
     assert result.blob == data
     assert result.size == len(data)
 
 
 @pytest.mark.asyncio
 async def test_get_content_type_default(adapter):
-    filename = await adapter.put(b"data")
-    basename = os.path.basename(filename)
-    result = await adapter.get(basename)
+    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=b"data"))
+    result = await adapter.get(filename)
     assert result.content_type == "application/octet-stream"
 
 

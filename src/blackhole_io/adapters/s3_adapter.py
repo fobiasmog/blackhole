@@ -2,17 +2,17 @@ import asyncio
 import concurrent.futures
 import functools
 import logging
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 import boto3
 from botocore.config import Config
 from starlette.datastructures import UploadFile
 
-from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
 from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.s3 import S3Config
+from blackhole_io.types import UploadFileType
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +30,19 @@ class S3Adapter(AbstractAdapter):
             aws_secret_access_key=self.config.secret_key,
         )
 
-    async def put(
-        self, file: UploadFileType, key: Optional[str] = None, **kwargs
-    ) -> str:
-        key = kwargs.get("Key") or key or uuid4().hex
+    async def put(self, file: BlackholeFile) -> str:
+        key = file.filename
+        extra = dict(file.extra)
         logger.info("Uploading %s to bucket", key)
         loop = asyncio.get_event_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return await loop.run_in_executor(
-                pool, functools.partial(self._sync_put, file, key, **kwargs)
+                pool, functools.partial(self._sync_put, file.data_to_upload, key, **extra)
             )
 
-    async def put_all(self, files: list[UploadFileType], **kwargs) -> list[Any]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[Any]:
         return await asyncio.gather(
-            *[self.put(file=file, **kwargs) for file in files],
+            *[self.put(file=file) for file in files],
         )
 
     async def get(self, file_name: str) -> BlackholeFile:

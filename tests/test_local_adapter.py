@@ -6,6 +6,7 @@ import pytest_asyncio
 from starlette.datastructures import UploadFile
 
 from blackhole_io.adapters.local_adapter import LocalAdapter
+from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.local import LocalConfig
 
 
@@ -18,18 +19,20 @@ async def adapter(tmp_path):
 @pytest.mark.asyncio
 async def test_put_bytes(adapter, tmp_path):
     data = b"hello bytes"
-    filename = await adapter.put(data)
-    assert os.path.exists(filename)
-    with open(filename, "rb") as f:
+    file = BlackholeFile(filename="test", data_to_upload=data)
+    filename = await adapter.put(file)
+    assert os.path.exists(tmp_path / filename)
+    with open(tmp_path / filename, "rb") as f:
         assert f.read() == data
 
 
 @pytest.mark.asyncio
 async def test_put_bytesio(adapter, tmp_path):
     data = b"hello bytesio"
-    filename = await adapter.put(BytesIO(data))
-    assert os.path.exists(filename)
-    with open(filename, "rb") as f:
+    file = BlackholeFile(filename="test", data_to_upload=BytesIO(data))
+    filename = await adapter.put(file)
+    assert os.path.exists(tmp_path / filename)
+    with open(tmp_path / filename, "rb") as f:
         assert f.read() == data
 
 
@@ -37,9 +40,10 @@ async def test_put_bytesio(adapter, tmp_path):
 async def test_put_str_path(adapter, tmp_path):
     source = tmp_path / "source.txt"
     source.write_bytes(b"hello file path")
-    filename = await adapter.put(str(source))
-    assert os.path.exists(filename)
-    with open(filename, "rb") as f:
+    file = BlackholeFile(filename="test", data_to_upload=str(source))
+    filename = await adapter.put(file)
+    assert os.path.exists(tmp_path / filename)
+    with open(tmp_path / filename, "rb") as f:
         assert f.read() == b"hello file path"
 
 
@@ -47,35 +51,39 @@ async def test_put_str_path(adapter, tmp_path):
 async def test_put_upload_file(adapter, tmp_path):
     data = b"hello upload"
     upload = UploadFile(file=BytesIO(data), filename="test.txt")
-    filename = await adapter.put(upload)
-    assert os.path.exists(filename)
-    with open(filename, "rb") as f:
+    file = BlackholeFile(filename="test.txt", data_to_upload=upload)
+    filename = await adapter.put(file)
+    assert os.path.exists(tmp_path / filename)
+    with open(tmp_path / filename, "rb") as f:
         assert f.read() == data
 
 
 @pytest.mark.asyncio
 async def test_put_unsupported_type(adapter):
-    with pytest.raises(TypeError):
-        await adapter.put(12345)
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        BlackholeFile(filename="test", data_to_upload=12345)
 
 
 @pytest.mark.asyncio
 async def test_put_all(adapter, tmp_path):
-    files = [b"file1", b"file2", b"file3"]
+    raw_files = [b"file1", b"file2", b"file3"]
+    files = [BlackholeFile(filename=f"f{i}", data_to_upload=d) for i, d in enumerate(raw_files)]
     filenames = await adapter.put_all(files)
     assert len(filenames) == 3
     for i, fname in enumerate(filenames):
-        with open(fname, "rb") as f:
-            assert f.read() == files[i]
+        with open(tmp_path / fname, "rb") as f:
+            assert f.read() == raw_files[i]
 
 
 @pytest.mark.asyncio
 async def test_get(adapter, tmp_path):
     data = b"get me"
-    filename = await adapter.put(data)
-    basename = os.path.basename(filename)
-    result = await adapter.get(basename)
-    assert result.filename == basename
+    file = BlackholeFile(filename="test", data_to_upload=data)
+    filename = await adapter.put(file)
+    result = await adapter.get(filename)
+    assert result.filename == filename
     assert result.blob == data
     assert result.size == len(data)
 
@@ -89,9 +97,9 @@ async def test_get_not_found(adapter):
 @pytest.mark.asyncio
 async def test_exists_true(adapter, tmp_path):
     data = b"i exist"
-    filename = await adapter.put(data)
-    basename = os.path.basename(filename)
-    assert await adapter.exists(basename) is True
+    file = BlackholeFile(filename="test", data_to_upload=data)
+    filename = await adapter.put(file)
+    assert await adapter.exists(filename) is True
 
 
 @pytest.mark.asyncio
@@ -102,11 +110,12 @@ async def test_exists_false(adapter):
 @pytest.mark.asyncio
 async def test_delete(adapter, tmp_path):
     data = b"delete me"
-    filename = await adapter.put(data)
-    basename = os.path.basename(filename)
-    assert os.path.exists(filename)
-    await adapter.delete(basename)
-    assert not os.path.exists(filename)
+    file = BlackholeFile(filename="test", data_to_upload=data)
+    filename = await adapter.put(file)
+    full_path = tmp_path / filename
+    assert os.path.exists(full_path)
+    await adapter.delete(filename)
+    assert not os.path.exists(full_path)
 
 
 @pytest.mark.asyncio

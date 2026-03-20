@@ -1,6 +1,5 @@
 import logging
 
-from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.abstract import AbstractAdapter
 from blackhole_io.blackhole_file import BlackholeFile
 
@@ -11,11 +10,11 @@ class GCPAdapter(AbstractAdapter):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    async def put(self, file: UploadFileType) -> str:
+    async def put(self, file: BlackholeFile) -> str:
         logger.info("PUT")
         return ""
 
-    async def put_all(self, files: list[UploadFileType]) -> list[str]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[str]:
         logger.info("PUT ALL")
         return [""] * len(files)
 

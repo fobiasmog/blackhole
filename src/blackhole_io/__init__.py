@@ -40,23 +40,26 @@ class Blackhole:
         filename: Optional[str] = None,
         extra_metadata: Optional[dict[str, Any]] = None,
     ) -> str:
+        upload_filename = None
+        content_type = None
+
         if file.__class__.__name__ == "UploadFile":
             upload_filename = file.filename
             content_type = file.content_type
-        else:
-            upload_filename = filename or uuid4().hex
-            content_type = None
 
-        file_to_upload = BlackholeFile(
+        upload_filename = upload_filename or filename or uuid4().hex
+        content_type = content_type or None
+
+        bh_file = BlackholeFile(
             filename=upload_filename,
             content_type=content_type,
             data_to_upload=file,
         )
 
-        filename = await self.adapter.put(file_to_upload)
+        filename = await self.adapter.put(bh_file)
 
         logger.info(
-            f"Uploading filename: {filename} ",
+            f"Uploading filename: {upload_filename} ",
             f"with content_type: {content_type}" if content_type else "",
         )
 
@@ -71,7 +74,11 @@ class Blackhole:
         files: list[UploadFileType],
         extra_metadata: Optional[list[Optional[dict[str, Any]]]] = None,
     ) -> list[str]:
-        filenames = await self.adapter.put_all(files)
+        files_to_upload = [
+            BlackholeFile(filename=uuid4().hex, data_to_upload=f)
+            for f in files
+        ]
+        filenames = await self.adapter.put_all(files_to_upload)
         if self.store is not None:
             meta_list = extra_metadata or [None] * len(filenames)
             await asyncio.gather(

@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from blackhole_io import Blackhole
+from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.local import LocalConfig
 from blackhole_io.configs.s3 import S3Config
 
@@ -48,6 +49,7 @@ async def test_s3_adapter_logs_on_put(caplog):
 
     with caplog.at_level(logging.INFO, logger="blackhole_io.adapters.s3_adapter"):
         with patch.object(adapter, "_sync_put", return_value="test-key"):
-            await adapter.put(b"data", key="test-key")
+            file = BlackholeFile(filename="test-key", data_to_upload=b"data")
+            await adapter.put(file)
 
     assert any("Uploading test-key" in r.message for r in caplog.records)

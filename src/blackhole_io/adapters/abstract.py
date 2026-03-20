@@ -8,14 +8,12 @@ class AbstractAdapter(ABC):
     def __init__(self, config: Any) -> None:
         self.config = config
 
-    # TODO: return BlackholeFile
     @abstractmethod
-    async def put(self, **kwargs) -> str:
+    async def put(self, file: BlackholeFile) -> str:
         pass
 
-    # TODO: return list of BlackholeFile
     @abstractmethod
-    async def put_all(self, **kwargs) -> list[str]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[str]:
         pass
 
     @abstractmethod
