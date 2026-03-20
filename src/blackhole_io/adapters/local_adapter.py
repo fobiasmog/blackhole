@@ -1,7 +1,6 @@
 import asyncio
-from pathlib import Path
 from io import BytesIO
-from uuid import uuid4
+from pathlib import Path
 
 import aiofiles
 import aiofiles.os
@@ -21,13 +20,11 @@ class LocalAdapter(AbstractAdapter):
         file_id = file.filename
         data_to_upload = file.data_to_upload
 
-        ext = Path(file_id).suffix
-
-        if isinstance(data_to_upload, UploadFile) or ext:  # for UploadFile we probably have a correct content type
-            filename = directory / file_id
-        elif isinstance(data_to_upload, str):
+        if isinstance(data_to_upload, str):
             filename = directory / (file_id + Path(data_to_upload).suffix)
-        else:  # bytes and BytesIO just rely on file_id to determine the extension
+        else:
+            # for UploadFile we probably have a correct content type even if its no extension at all
+            # bytes and BytesIO just rely on file_id to determine the extension
             filename = directory / file_id
 
         if isinstance(data_to_upload, str):

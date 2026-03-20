@@ -1,8 +1,8 @@
 import asyncio
 import logging
-from uuid import uuid4
 from pathlib import Path
 from typing import Any, Optional
+from uuid import uuid4
 
 from blackhole_io.adapters import UploadFileType
 from blackhole_io.adapters.factory import AdapterFactory

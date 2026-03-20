@@ -3,7 +3,6 @@ import concurrent.futures
 import functools
 import logging
 from typing import Any
-from uuid import uuid4
 
 import boto3
 from botocore.config import Config

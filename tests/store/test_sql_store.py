@@ -50,7 +50,7 @@ async def test_delete_nonexistent_is_noop(store):
 @pytest.mark.asyncio
 async def test_save_with_metadata(store):
     meta = {"user_id": 7, "tag": "invoice"}
-    record = await store.save(FileRecordInput(filename="meta.pdf", extra_metadata=meta))
+    await store.save(FileRecordInput(filename="meta.pdf", extra_metadata=meta))
     fetched = await store.get("meta.pdf")
     assert fetched is not None
     assert fetched.extra_metadata == meta
