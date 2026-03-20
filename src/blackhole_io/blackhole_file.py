@@ -9,6 +9,7 @@ class BlackholeFile(BaseModel):
     content_type: str = Field(default="application/octet-stream")
     size: int = Field(default=0)
     data: bytes = Field(default=b"", repr=False)
+    data_to_upload: bytes = Field(default=b"", repr=False)
 
     @property
     def blob(self) -> bytes:
