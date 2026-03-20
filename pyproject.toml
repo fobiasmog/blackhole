@@ -1,6 +1,6 @@
 [project]
 name = "blackhole-io"
-version = "0.1.2"
+version = "0.1.3"
 description = "Universal file storage interface for Python"
 readme = "README.md"
 authors = [
