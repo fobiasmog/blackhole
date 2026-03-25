@@ -53,7 +53,7 @@ class Blackhole:
             data_to_upload=file,
         )
 
-        filename = await self.adapter.put(bh_file)
+        result = await self.adapter.put(bh_file)
 
         logger.info(
             f"Uploading filename: {upload_filename} with content_type: {content_type}"
@@ -61,9 +61,14 @@ class Blackhole:
 
         if self.store is not None:
             await self.store.save(
-                FileRecordInput(filename=filename, content_type=content_type, extra_metadata=extra_metadata)
+                FileRecordInput(
+                    filename=result.filename,
+                    hashsum=result.hashsum,
+                    content_type=content_type,
+                    extra_metadata=extra_metadata,
+                )
             )
-        return filename
+        return result.filename
 
     async def put_all(
         self,
@@ -74,18 +79,22 @@ class Blackhole:
             BlackholeFile(filename=uuid4().hex, data_to_upload=f)
             for f in files
         ]
-        filenames = await self.adapter.put_all(files_to_upload)
+        results = await self.adapter.put_all(files_to_upload)
         if self.store is not None:
-            meta_list = extra_metadata or [None] * len(filenames)
+            meta_list = extra_metadata or [None] * len(results)
             await asyncio.gather(
                 *[
                     self.store.save(
-                        FileRecordInput(filename=fn, extra_metadata=m)
+                        FileRecordInput(
+                            filename=r.filename,
+                            hashsum=r.hashsum,
+                            extra_metadata=m,
+                        )
                     )
-                    for fn, m in zip(filenames, meta_list)
+                    for r, m in zip(results, meta_list)
                 ]
             )
-        return filenames
+        return [r.filename for r in results]
 
     async def get(self, file_name: str) -> BlackholeFile:
         return await self.adapter.get(file_name)

@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 from io import BytesIO
 from pathlib import Path
 
@@ -6,7 +7,7 @@ import aiofiles
 import aiofiles.os
 from starlette.datastructures import UploadFile
 
-from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.adapters.abstract import AbstractAdapter, PutResult
 from blackhole_io.blackhole_file import BlackholeFile
 
 # TODO: add support for directory structure - now put supports only flat structure
@@ -15,7 +16,7 @@ class LocalAdapter(AbstractAdapter):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    async def put(self, file: BlackholeFile) -> str:
+    async def put(self, file: BlackholeFile) -> PutResult:
         directory = Path(self.config.directory)
         file_id = file.filename
         data_to_upload = file.data_to_upload
@@ -30,22 +31,20 @@ class LocalAdapter(AbstractAdapter):
         if isinstance(data_to_upload, str):
             async with aiofiles.open(data_to_upload, "rb") as f:
                 data = await f.read()
-            async with aiofiles.open(filename, "wb") as out:
-                await out.write(data)
         elif isinstance(data_to_upload, bytes):
-            async with aiofiles.open(filename, "wb") as out:
-                await out.write(data_to_upload)
+            data = data_to_upload
         elif isinstance(data_to_upload, BytesIO):
-            async with aiofiles.open(filename, "wb") as out:
-                await out.write(data_to_upload.getvalue())
+            data = data_to_upload.getvalue()
         elif isinstance(data_to_upload, UploadFile):
-            filebytes = await data_to_upload.read()
-            async with aiofiles.open(filename, "wb") as out:
-                await out.write(filebytes)
+            data = await data_to_upload.read()
         else:
             raise TypeError("Unsupported file type. Must be str, bytes, BytesIO or UploadFile.")
 
-        return filename.name
+        async with aiofiles.open(filename, "wb") as out:
+            await out.write(data)
+
+        hashsum = hashlib.sha256(data).hexdigest()
+        return PutResult(filename=filename.name, hashsum=hashsum)
 
     async def put_all(self, files: list[BlackholeFile]) -> list[str]:
         return await asyncio.gather(*[self.put(file) for file in files])

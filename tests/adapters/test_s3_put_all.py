@@ -13,6 +13,7 @@ from blackhole_io.configs.s3 import S3Config
 async def adapter():
     with patch("blackhole_io.adapters.s3_adapter.boto3") as mock_boto3:
         mock_client = MagicMock()
+        mock_client.head_object.return_value = {"ETag": '"fake-etag"'}
         mock_boto3.client.return_value = mock_client
         config = S3Config(
             bucket="test-bucket",

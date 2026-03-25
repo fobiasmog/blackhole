@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, NamedTuple
 
 from blackhole_io.blackhole_file import BlackholeFile
+
+
+class PutResult(NamedTuple):
+    filename: str
+    hashsum: str
 
 
 class AbstractAdapter(ABC):
@@ -9,11 +14,11 @@ class AbstractAdapter(ABC):
         self.config = config
 
     @abstractmethod
-    async def put(self, file: BlackholeFile) -> str:
+    async def put(self, file: BlackholeFile) -> PutResult:
         pass
 
     @abstractmethod
-    async def put_all(self, files: list[BlackholeFile]) -> list[str]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[PutResult]:
         pass
 
     @abstractmethod

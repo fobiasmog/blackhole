@@ -20,9 +20,9 @@ async def adapter(tmp_path):
 async def test_put_bytes(adapter, tmp_path):
     data = b"hello bytes"
     file = BlackholeFile(filename="test", data_to_upload=data)
-    filename = await adapter.put(file)
-    assert os.path.exists(tmp_path / filename)
-    with open(tmp_path / filename, "rb") as f:
+    result = await adapter.put(file)
+    assert os.path.exists(tmp_path / result.filename)
+    with open(tmp_path / result.filename, "rb") as f:
         assert f.read() == data
 
 
@@ -30,9 +30,9 @@ async def test_put_bytes(adapter, tmp_path):
 async def test_put_bytesio(adapter, tmp_path):
     data = b"hello bytesio"
     file = BlackholeFile(filename="test", data_to_upload=BytesIO(data))
-    filename = await adapter.put(file)
-    assert os.path.exists(tmp_path / filename)
-    with open(tmp_path / filename, "rb") as f:
+    result = await adapter.put(file)
+    assert os.path.exists(tmp_path / result.filename)
+    with open(tmp_path / result.filename, "rb") as f:
         assert f.read() == data
 
 
@@ -41,9 +41,9 @@ async def test_put_str_path(adapter, tmp_path):
     source = tmp_path / "source.txt"
     source.write_bytes(b"hello file path")
     file = BlackholeFile(filename="test", data_to_upload=str(source))
-    filename = await adapter.put(file)
-    assert os.path.exists(tmp_path / filename)
-    with open(tmp_path / filename, "rb") as f:
+    result = await adapter.put(file)
+    assert os.path.exists(tmp_path / result.filename)
+    with open(tmp_path / result.filename, "rb") as f:
         assert f.read() == b"hello file path"
 
 
@@ -52,9 +52,9 @@ async def test_put_upload_file(adapter, tmp_path):
     data = b"hello upload"
     upload = UploadFile(file=BytesIO(data), filename="test.txt")
     file = BlackholeFile(filename="test.txt", data_to_upload=upload)
-    filename = await adapter.put(file)
-    assert os.path.exists(tmp_path / filename)
-    with open(tmp_path / filename, "rb") as f:
+    result = await adapter.put(file)
+    assert os.path.exists(tmp_path / result.filename)
+    with open(tmp_path / result.filename, "rb") as f:
         assert f.read() == data
 
 
@@ -70,10 +70,10 @@ async def test_put_unsupported_type(adapter):
 async def test_put_all(adapter, tmp_path):
     raw_files = [b"file1", b"file2", b"file3"]
     files = [BlackholeFile(filename=f"f{i}", data_to_upload=d) for i, d in enumerate(raw_files)]
-    filenames = await adapter.put_all(files)
-    assert len(filenames) == 3
-    for i, fname in enumerate(filenames):
-        with open(tmp_path / fname, "rb") as f:
+    results = await adapter.put_all(files)
+    assert len(results) == 3
+    for i, result in enumerate(results):
+        with open(tmp_path / result.filename, "rb") as f:
             assert f.read() == raw_files[i]
 
 
@@ -81,9 +81,9 @@ async def test_put_all(adapter, tmp_path):
 async def test_get(adapter, tmp_path):
     data = b"get me"
     file = BlackholeFile(filename="test", data_to_upload=data)
-    filename = await adapter.put(file)
-    result = await adapter.get(filename)
-    assert result.filename == filename
+    put_result = await adapter.put(file)
+    result = await adapter.get(put_result.filename)
+    assert result.filename == put_result.filename
     assert result.blob == data
     assert result.size == len(data)
 
@@ -98,8 +98,8 @@ async def test_get_not_found(adapter):
 async def test_exists_true(adapter, tmp_path):
     data = b"i exist"
     file = BlackholeFile(filename="test", data_to_upload=data)
-    filename = await adapter.put(file)
-    assert await adapter.exists(filename) is True
+    result = await adapter.put(file)
+    assert await adapter.exists(result.filename) is True
 
 
 @pytest.mark.asyncio
@@ -111,10 +111,10 @@ async def test_exists_false(adapter):
 async def test_delete(adapter, tmp_path):
     data = b"delete me"
     file = BlackholeFile(filename="test", data_to_upload=data)
-    filename = await adapter.put(file)
-    full_path = tmp_path / filename
+    result = await adapter.put(file)
+    full_path = tmp_path / result.filename
     assert os.path.exists(full_path)
-    await adapter.delete(filename)
+    await adapter.delete(result.filename)
     assert not os.path.exists(full_path)
 
 

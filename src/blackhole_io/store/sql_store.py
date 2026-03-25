@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -24,8 +25,25 @@ class SQLStore(AbstractStore):
 
     async def save(self, record: FileRecordInput) -> FileRecord:
         async with AsyncSession(self._engine) as session:
+            result = await session.exec(
+                select(FileRecord).where(FileRecord.hashsum == record.hashsum)
+            )
+            existing = result.first()
+
+            if existing is not None:
+                existing.filename = record.filename
+                existing.content_type = record.content_type
+                existing.size = record.size
+                existing.extra_metadata = record.extra_metadata
+                existing.updated_at = datetime.now(timezone.utc)
+                session.add(existing)
+                await session.commit()
+                await session.refresh(existing)
+                return existing
+
             db_record = FileRecord(
                 filename=record.filename,
+                hashsum=record.hashsum,
                 content_type=record.content_type,
                 size=record.size,
                 extra_metadata=record.extra_metadata,

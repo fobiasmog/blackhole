@@ -8,7 +8,7 @@ import boto3
 from botocore.config import Config
 from starlette.datastructures import UploadFile
 
-from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.adapters.abstract import AbstractAdapter, PutResult
 from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.s3 import S3Config
 from blackhole_io.types import UploadFileType
@@ -29,7 +29,7 @@ class S3Adapter(AbstractAdapter):
             aws_secret_access_key=self.config.secret_key,
         )
 
-    async def put(self, file: BlackholeFile) -> str:
+    async def put(self, file: BlackholeFile) -> PutResult:
         key = file.filename
         extra = dict(file.extra)
         logger.info("Uploading %s to bucket", key)
@@ -97,18 +97,20 @@ class S3Adapter(AbstractAdapter):
             Key=file_name,
         )
 
-    def _sync_put(self, file: UploadFileType, key: str, **kwargs) -> str:
+    def _sync_put(self, file: UploadFileType, key: str, **kwargs) -> PutResult:
         bucket = kwargs.pop("Bucket", self.config.bucket)
         kwargs.pop("Key", None)
 
         if isinstance(file, str):
             self.client.upload_file(Filename=file, Bucket=bucket, Key=key, **kwargs)
-            return key
+        else:
+            fileobj = file
+            if isinstance(file, UploadFile):
+                fileobj = file.file
 
-        fileobj = file
-        if isinstance(file, UploadFile):
-            fileobj = file.file
+            self.client.upload_fileobj(Fileobj=fileobj, Bucket=bucket, Key=key, **kwargs)
+            logger.info("Uploaded %s to bucket", key)
 
-        self.client.upload_fileobj(Fileobj=fileobj, Bucket=bucket, Key=key, **kwargs)
-        logger.info("Uploaded %s to bucket", key)
-        return key
+        response = self.client.head_object(Bucket=bucket, Key=key)
+        etag = response["ETag"].strip('"')
+        return PutResult(filename=key, hashsum=etag)
