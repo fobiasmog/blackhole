@@ -8,10 +8,10 @@ from blackhole_io.blackhole_file import BlackholeFile
 @pytest.mark.asyncio
 async def test_delete(adapter, tmp_path):
     data = b"delete me"
-    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
-    full_path = tmp_path / filename
+    result = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
+    full_path = tmp_path / result.filename
     assert os.path.exists(full_path)
-    await adapter.delete(filename)
+    await adapter.delete(result.filename)
     assert not os.path.exists(full_path)
 
 

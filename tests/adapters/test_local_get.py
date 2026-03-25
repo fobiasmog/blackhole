@@ -7,9 +7,9 @@ from blackhole_io.blackhole_file import BlackholeFile
 @pytest.mark.asyncio
 async def test_get(adapter):
     data = b"get me"
-    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
-    result = await adapter.get(filename)
-    assert result.filename == filename
+    put_result = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
+    result = await adapter.get(put_result.filename)
+    assert result.filename == put_result.filename
     assert result.blob == data
     assert result.size == len(data)
 

@@ -7,8 +7,8 @@ from blackhole_io.blackhole_file import BlackholeFile
 @pytest.mark.asyncio
 async def test_exists_true(adapter):
     data = b"i exist"
-    filename = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
-    assert await adapter.exists(filename) is True
+    result = await adapter.put(BlackholeFile(filename="test", data_to_upload=data))
+    assert await adapter.exists(result.filename) is True
 
 
 @pytest.mark.asyncio

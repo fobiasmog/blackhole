@@ -17,10 +17,13 @@ async def store():
 
 @pytest.mark.asyncio
 async def test_save_and_get(store):
-    record = await store.save(FileRecordInput(filename="test.txt", content_type="text/plain", size=42))
+    record = await store.save(
+        FileRecordInput(filename="test.txt", hashsum="abc123", content_type="text/plain", size=42)
+    )
     assert isinstance(record, FileRecord)
     assert record.id is not None
     assert record.filename == "test.txt"
+    assert record.hashsum == "abc123"
     assert record.content_type == "text/plain"
     assert record.size == 42
 
@@ -37,7 +40,7 @@ async def test_get_missing(store):
 
 @pytest.mark.asyncio
 async def test_delete(store):
-    await store.save(FileRecordInput(filename="to_delete.txt"))
+    await store.save(FileRecordInput(filename="to_delete.txt", hashsum="del123"))
     await store.delete("to_delete.txt")
     assert await store.get("to_delete.txt") is None
 
@@ -50,7 +53,7 @@ async def test_delete_nonexistent_is_noop(store):
 @pytest.mark.asyncio
 async def test_save_with_metadata(store):
     meta = {"user_id": 7, "tag": "invoice"}
-    await store.save(FileRecordInput(filename="meta.pdf", extra_metadata=meta))
+    await store.save(FileRecordInput(filename="meta.pdf", hashsum="meta123", extra_metadata=meta))
     fetched = await store.get("meta.pdf")
     assert fetched is not None
     assert fetched.extra_metadata == meta
@@ -71,6 +74,34 @@ async def test_sql_store_requires_engine_or_dsn():
 async def test_sql_store_from_dsn():
     s = SQLStore(dsn="sqlite+aiosqlite:///:memory:")
     await s.create_tables()
-    record = await s.save(FileRecordInput(filename="dsn_test.bin"))
+    record = await s.save(FileRecordInput(filename="dsn_test.bin", hashsum="dsn123"))
     assert record.filename == "dsn_test.bin"
     await s.engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_save_upsert_same_hashsum(store):
+    """When saving with the same hashsum, the existing record is updated."""
+    record1 = await store.save(
+        FileRecordInput(filename="v1.txt", hashsum="same_hash", content_type="text/plain", size=10)
+    )
+    record2 = await store.save(
+        FileRecordInput(filename="v2.txt", hashsum="same_hash", content_type="text/csv", size=20)
+    )
+    assert record2.id == record1.id
+    assert record2.filename == "v2.txt"
+    assert record2.content_type == "text/csv"
+    assert record2.size == 20
+    assert record2.updated_at >= record1.updated_at
+
+
+@pytest.mark.asyncio
+async def test_save_different_hashsum_creates_new(store):
+    """When saving with a different hashsum, a new record is created."""
+    record1 = await store.save(
+        FileRecordInput(filename="file.txt", hashsum="hash_a", size=10)
+    )
+    record2 = await store.save(
+        FileRecordInput(filename="file.txt", hashsum="hash_b", size=20)
+    )
+    assert record2.id != record1.id

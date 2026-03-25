@@ -19,6 +19,7 @@ The universal file storage adapter for the major Cloud storage services like AWS
   - [ ] store file's hashsum
   - [ ] use ETag as hashsum and make uniq constraint on that column (create it as well)
   - [ ] remove filename unique constraint
+  - [ ] migrations for further schema changes
 - [x] pluggable store abstraction (SQL, extensible to Redis, MongoDB, etc.)
 - [ ] middlewares (pre/post)
 - [ ] put_later - background job uploading/downloading

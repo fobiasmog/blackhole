@@ -1,6 +1,6 @@
 import logging
 
-from blackhole_io.adapters.abstract import AbstractAdapter
+from blackhole_io.adapters.abstract import AbstractAdapter, PutResult
 from blackhole_io.blackhole_file import BlackholeFile
 
 logger = logging.getLogger(__name__)
@@ -10,13 +10,13 @@ class GCPAdapter(AbstractAdapter):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    async def put(self, file: BlackholeFile) -> str:
+    async def put(self, file: BlackholeFile) -> PutResult:
         logger.info("PUT")
-        return ""
+        return PutResult(filename="", hashsum="")
 
-    async def put_all(self, files: list[BlackholeFile]) -> list[str]:
+    async def put_all(self, files: list[BlackholeFile]) -> list[PutResult]:
         logger.info("PUT ALL")
-        return [""] * len(files)
+        return [PutResult(filename="", hashsum="")] * len(files)
 
     async def get(self, file_name: str) -> BlackholeFile:
         logger.info("GET")
