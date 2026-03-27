@@ -1,7 +1,6 @@
 """Tests for Blackhole.put() — filename resolution and content_type extraction."""
 
 from io import BytesIO
-from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio

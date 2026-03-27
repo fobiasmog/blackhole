@@ -1,8 +1,9 @@
 ### BlackholeFile
 # Object of this class represents the information about uploaded/downloaded file
 
-from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from blackhole_io.types import UploadFileType
 
