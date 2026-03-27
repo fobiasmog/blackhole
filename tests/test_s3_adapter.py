@@ -9,7 +9,6 @@ from blackhole_io.adapters.s3_adapter import S3Adapter
 from blackhole_io.blackhole_file import BlackholeFile
 from blackhole_io.configs.s3 import S3Config
 
-
 FAKE_ETAG = '"abc123def456"'
 
 

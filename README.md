@@ -16,9 +16,9 @@ The universal file storage adapter for the major Cloud storage services like AWS
 - [x] get settings from yaml file (pydantic-settings)
 - [x] SQLModel / SQL database integration
   - [ ] save adapter type when storing record
-  - [ ] store file's hashsum
-  - [ ] use ETag as hashsum and make uniq constraint on that column (create it as well)
-  - [ ] remove filename unique constraint
+  - [x] store file's hashsum
+  - [x] use ETag as hashsum and make uniq constraint on that column (create it as well)
+  - [x] remove filename unique constraint
   - [ ] migrations for further schema changes
 - [x] pluggable store abstraction (SQL, extensible to Redis, MongoDB, etc.)
 - [ ] middlewares (pre/post)
@@ -28,6 +28,12 @@ The universal file storage adapter for the major Cloud storage services like AWS
 - [ ] error tracking
 - [x] logging
 - [ ] big files upload/download (streaming)
+- [ ] AI and tooling for it
+  - [x] OpenAI tool integration
+  - [x] Anthropic tool integration
+  - [ ] Google tool integration
+  - [ ] LangChain tool integration
+  - [ ] ...
 - [ ] ...
 
 
@@ -43,8 +49,11 @@ pip install "blackhole-io[sql]"
 # with CLI
 pip install "blackhole-io[cli]"
 
+# with Anthropic tool-use support
+pip install "blackhole-io[anthropic]"
+
 # everything
-pip install "blackhole-io[sql,cli]"
+pip install "blackhole-io[sql,cli,anthropic]"
 ```
 
 
@@ -78,6 +87,33 @@ if await bh.exists(filename):
 
     await bh.delete(filename)
 ```
+
+
+### AI agent tool use — Anthropic
+
+```python
+import anthropic
+from blackhole_io import Blackhole
+from blackhole_io.configs.s3 import S3Config
+from blackhole_io.tools.anthropic import BlackholeAnthropicTools
+
+bh = Blackhole(config=S3Config(...))
+bh_tools = BlackholeAnthropicTools(bh)
+client = anthropic.AsyncAnthropic()
+
+# Pass tool definitions to the model
+response = await client.messages.create(
+    model="claude-opus-4-6",
+    max_tokens=1024,
+    tools=bh_tools.definitions(),   # blackhole_put / get / exists / delete
+    messages=[{"role": "user", "content": "Store this report for me ..."}],
+)
+
+# Handle tool calls in the agentic loop
+tool_results = await bh_tools.handle_response(response.content)
+```
+
+See `examples/anthropic_agent_loop.py` for a full working loop.
 
 
 ### SQL store — persist a record on every upload
