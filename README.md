@@ -24,10 +24,13 @@ The universal file storage adapter for the major Cloud storage services like AWS
 - [ ] middlewares (pre/post)
 - [ ] put_later - background job uploading/downloading
 - [ ] asset management web interface
-- [ ] monitoring
-- [ ] error tracking
-- [x] logging
+- [ ] Telemetry
+  - [ ] monitoring
+  - [ ] error tracking
+  - [x] logging
+  - [ ] OTel? Signoz?
 - [ ] big files upload/download (streaming)
+- [ ] do not upload any cloud dependencies by default
 - [ ] AI and tooling for it
   - [x] OpenAI tool integration
   - [x] Anthropic tool integration

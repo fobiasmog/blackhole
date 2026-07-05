@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 import yaml
 
 from blackhole_io.configs import ConfigType
+from blackhole_io.configs.aistore import AIStoreConfig
 from blackhole_io.configs.gcp import GCPConfig
 from blackhole_io.configs.local import LocalConfig
 from blackhole_io.configs.s3 import S3Config
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 ADAPTER_MAP: dict[str, type] = {
     "s3": S3Config,
     "gcp": GCPConfig,
+    "aistor": AIStoreConfig,
     "local": LocalConfig,
 }
 

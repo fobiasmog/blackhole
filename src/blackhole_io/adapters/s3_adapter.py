@@ -15,6 +15,7 @@ from blackhole_io.types import UploadFileType
 
 logger = logging.getLogger(__name__)
 
+# TODO: content-type, metadata...
 
 class S3Adapter(AbstractAdapter):
     def __init__(self, config: S3Config, **kwargs) -> None:

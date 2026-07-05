@@ -161,3 +161,8 @@ cython_debug/
 .DS_Store
 
 .ruff_cache
+
+examples/aistor-minio/data/*
+examples/aistor-minio/license
+examples/aistor-minio/files
+examples/aistor-minio/config/blackhole.yaml

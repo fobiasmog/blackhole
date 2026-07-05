@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from blackhole_io.adapters.abstract import AbstractAdapter
-from blackhole_io.configs import GCPConfig, LocalConfig, S3Config
+from blackhole_io.configs import (AIStoreConfig, GCPConfig, LocalConfig,
+                                  S3Config)
 
 if TYPE_CHECKING:
+    from blackhole_io.adapters.aistor_adapter import AIStoreAdapter
     from blackhole_io.adapters.gcp_adapter import GCPAdapter
     from blackhole_io.adapters.local_adapter import LocalAdapter
     from blackhole_io.adapters.s3_adapter import S3Adapter
@@ -25,6 +27,10 @@ class AdapterFactory:
     @classmethod
     def create(cls, config: LocalConfig) -> "LocalAdapter": ...
 
+    @overload
+    @classmethod
+    def create(cls, config: AIStoreConfig) -> "AIStoreAdapter": ...
+
     @classmethod
     def create(cls, config: ConfigType) -> AbstractAdapter:
         if isinstance(config, S3Config):
@@ -38,5 +44,9 @@ class AdapterFactory:
         if isinstance(config, LocalConfig):
             from blackhole_io.adapters.local_adapter import LocalAdapter
             return LocalAdapter(config)
+
+        if isinstance(config, AIStoreConfig):
+            from blackhole_io.adapters.aistor_adapter import AIStoreAdapter
+            return AIStoreAdapter(config)
 
         raise ValueError("Unsupported configuration type")
