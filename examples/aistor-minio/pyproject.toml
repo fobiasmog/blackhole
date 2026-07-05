@@ -1,0 +1,13 @@
+[project]
+name = "aistor-minio"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    { name = "fobiasmog", email = "zbrejkin@yandex.ru" }
+]
+dependencies = [
+    "fastapi[standard]>=0.139.0",
+    "uvloop>=0.22.1",
+]

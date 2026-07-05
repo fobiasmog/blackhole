@@ -23,7 +23,7 @@ class AIStoreAdapter(AbstractAdapter):
         )
 
     async def put(self, file: BlackholeFile) -> PutResult:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return await loop.run_in_executor(
                 pool,
@@ -31,16 +31,50 @@ class AIStoreAdapter(AbstractAdapter):
             )
 
     async def put_all(self, files: list[BlackholeFile]) -> list[PutResult]:
-        pass
+        return await asyncio.gather(
+            *[self.put(file=file) for file in files],
+        )
 
-    async def get(self, **kwargs) -> BlackholeFile:
-        pass
+    async def get(self, key: str) -> BlackholeFile:
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool,
+                functools.partial(self._sync_get, key),
+            )
 
-    async def exists(self, **kwargs) -> bool:
-        pass
+    async def exists(self, key: str) -> bool:
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool,
+                functools.partial(self._sync_exists, key),
+            )
 
-    async def delete(self, **kwargs) -> None:
-        pass
+    async def delete(self, key: str) -> None:
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(
+                pool,
+                functools.partial(self._sync_delete, key),
+            )
+
+    def _sync_get(self, key: str) -> BlackholeFile:
+        try:
+            response = self.client.get_object(
+                bucket_name=self.config.bucket,
+                object_name=key,
+            )
+        finally:
+            response.close()
+            response.release_conn()
+
+        return BlackholeFile(
+            filename=key,
+            content_type=response.get("ContentType", "application/octet-stream"),
+            size=response.get("ContentLength", 0),
+            data=response.data,
+        )
 
     def _sync_put(self, file: BlackholeFile, bucket:str = "default") -> PutResult:
         if not self.client.bucket_exists(bucket):
@@ -51,16 +85,21 @@ class AIStoreAdapter(AbstractAdapter):
                 bucket_name=bucket,
                 object_name=file.filename,
                 file_path=file.data_to_upload,
+                content_type=file.content_type,
+                metadata=file.extra,
             )
         else:
-            fileobj = file
-            if isinstance(file, UploadFile):
-                fileobj = file.file
+            fileobj = file.data_to_upload
+            if isinstance(fileobj, UploadFile):
+                fileobj = fileobj.file
+
             result = self.client.put_object(
                 bucket_name=bucket,
                 object_name=file.filename,
                 data=fileobj,
                 length=file.size,
+                content_type=file.content_type,
+                metadata=file.extra,
             )
 
         logger.info("Uploaded %s to bucket", file.filename)
@@ -69,3 +108,20 @@ class AIStoreAdapter(AbstractAdapter):
             filename=file.filename,
             hashsum=result.etag,
         )
+
+    def _sync_exists(self, key: str) -> bool:
+        try:
+            self.client.stat_object(
+                bucket_name=self.config.bucket,
+                object_name=key,
+            )
+            return True
+        except Exception:
+            return False
+
+    def _sync_delete(self, key: str) -> None:
+        self.client.remove_object(
+            bucket_name=self.config.bucket,
+            object_name=key,
+        )
+

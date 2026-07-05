@@ -42,14 +42,17 @@ class Blackhole:
     ) -> str:
         upload_filename = filename or uuid4().hex
         content_type = None
+        size = 0
 
-        if hasattr(file, "filename") and not filename:
+        if type(file).__name__ == "UploadFile" and not filename:
             upload_filename = file.filename or upload_filename
             content_type = file.content_type
+            size = file.size or 0
 
         bh_file = BlackholeFile(
             filename=upload_filename,
             content_type=content_type,
+            size=size,
             data_to_upload=file,
         )
 
